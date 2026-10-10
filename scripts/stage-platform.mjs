@@ -1,6 +1,7 @@
 import { cpSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { napi, root } from "./package-utils.mjs";
+import { root } from "./package-utils.mjs";
+import { NapiCli } from "@napi-rs/cli";
 const suffix = process.argv[2];
 const triplets = {
   "darwin-arm64": "arm64-osx",
@@ -10,7 +11,7 @@ const triplets = {
   "win32-x64-msvc": "x64-windows-static-md",
 };
 if (!triplets[suffix]) throw new Error(`Unknown target ${suffix}`);
-napi(["create-npm-dirs"]);
+await new NapiCli().createNpmDirs({ cwd: root });
 const target = resolve(root, "npm", suffix);
 cpSync(
   resolve(root, "binding", `napi-libzim.${suffix}.node`),

@@ -16,7 +16,8 @@
     "binding/index.cjs",
     "binding/index.d.cts",
     "LICENSE",
-    "THIRD_PARTY_NOTICES.md"
+    "THIRD_PARTY_NOTICES.md",
+    "licenses"
   ],
   "type": "module",
   "main": "./dist/index.cjs",
@@ -54,7 +55,11 @@
   "devDependencies": {
     "@napi-rs/cli": "^3.10.8",
     "@types/node": "^26.1.1",
+    "@types/semver": "^7.8.0",
     "bumpp": "^11.1.0",
+    "execa": "^10.1.0",
+    "p-limit": "^7.3.3",
+    "semver": "^7.8.5",
     "typescript": "^7.0.2",
     "vite-plus": "catalog:"
   },

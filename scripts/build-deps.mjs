@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { execaSync } from "execa";
 import { existsSync, mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,7 +16,7 @@ const triplets = {
 const triplet = triplets[`${process.platform}-${process.arch}`];
 if (!triplet) throw new Error(`Unsupported build host: ${process.platform}-${process.arch}`);
 const run = (cmd, args, cwd = root) =>
-  execFileSync(cmd, args, {
+  execaSync(cmd, args, {
     cwd,
     stdio: "inherit",
     env: { ...process.env, VCPKG_ROOT: vcpkgRoot },
@@ -28,11 +28,11 @@ if (!existsSync(resolve(vcpkgRoot, ".git"))) {
 }
 let currentRevision;
 try {
-  currentRevision = execFileSync("git", ["rev-parse", "HEAD"], {
+  currentRevision = execaSync("git", ["rev-parse", "HEAD"], {
     cwd: vcpkgRoot,
     encoding: "utf8",
     stdio: ["ignore", "pipe", "ignore"],
-  }).trim();
+  }).stdout.trim();
 } catch {
   currentRevision = "";
 }

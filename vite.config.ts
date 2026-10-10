@@ -5,16 +5,29 @@ export default defineConfig({
     "*": "vp check --fix",
   },
   test: { include: ["tests/*.test.ts"] },
-  pack: {
-    entry: ["src/index.ts"],
-    format: ["esm", "cjs"],
-    fixedExtension: false,
-    deps: { neverBundle: [/binding\/index\.cjs$/] },
-    dts: {
-      tsgo: {},
+  pack: [
+    {
+      entry: ["src/index.ts"],
+      format: ["esm", "cjs"],
+      fixedExtension: false,
+      deps: {
+        neverBundle: [/binding\/index\.cjs$/],
+        alwaysBundle: ["p-limit", "yocto-queue"],
+        onlyBundle: ["p-limit", "yocto-queue"],
+      },
+      dts: { tsgo: {} },
+      exports: false,
     },
-    exports: false,
-  },
+    {
+      entry: ["scripts/publish-release.mjs"],
+      outDir: ".ci",
+      format: "esm",
+      fixedExtension: false,
+      deps: { alwaysBundle: [/.*/], onlyBundle: false, onlyImport: [] },
+      dts: false,
+      exports: false,
+    },
+  ],
   lint: {
     ignorePatterns: [
       "binding/**",
@@ -23,6 +36,7 @@ export default defineConfig({
       "dist/**",
       "npm/**",
       "artifacts/**",
+      ".ci/**",
     ],
     options: {
       typeAware: true,
@@ -37,6 +51,7 @@ export default defineConfig({
       "dist/**",
       "npm/**",
       "artifacts/**",
+      ".ci/**",
     ],
   },
 });

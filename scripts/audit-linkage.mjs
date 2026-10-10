@@ -1,10 +1,10 @@
-import { execFileSync } from "node:child_process";
+import { execaSync } from "execa";
 const binary = process.argv[2];
 let output;
 if (process.platform === "darwin") {
-  output = execFileSync("otool", ["-L", binary], { encoding: "utf8" });
-  const identity = execFileSync("otool", ["-D", binary], { encoding: "utf8" })
-    .split("\n")[1]
+  output = execaSync("otool", ["-L", binary], { encoding: "utf8" }).stdout;
+  const identity = execaSync("otool", ["-D", binary], { encoding: "utf8" })
+    .stdout.split("\n")[1]
     ?.trim();
   const links = output
     .split("\n")
@@ -15,7 +15,7 @@ if (process.platform === "darwin") {
     if (link !== identity && !link.startsWith("/usr/lib/") && !link.startsWith("/System/Library/"))
       throw new Error(`Unbundled dependency: ${link}`);
 } else if (process.platform === "linux") {
-  output = execFileSync("ldd", [binary], { encoding: "utf8" });
+  output = execaSync("ldd", [binary], { encoding: "utf8" }).stdout;
   if (/not found/.test(output)) throw new Error(output);
   const allowed = /^(linux-vdso|ld-linux|lib(c|m|dl|pthread|rt|stdc\+\+|gcc_s)\.)/;
   for (const line of output.split("\n")) {
@@ -24,7 +24,7 @@ if (process.platform === "darwin") {
   }
 } else {
   // dumpbin is available after entering the MSVC development environment.
-  output = execFileSync("dumpbin", ["/DEPENDENTS", binary], { encoding: "utf8" });
+  output = execaSync("dumpbin", ["/DEPENDENTS", binary], { encoding: "utf8" }).stdout;
   const dlls = output.match(/[\w.-]+\.dll/gi) ?? [];
   const allowed =
     /^(kernel32|advapi32|user32|shell32|ole32|oleaut32|ws2_32|rpcrt4|winmm|shlwapi|bcrypt|ntdll|ucrtbase|vcruntime\d+(?:_\d+)?|msvcp\d+(?:_\d+)?|api-ms-win-[\w-]+)\.dll$/i;

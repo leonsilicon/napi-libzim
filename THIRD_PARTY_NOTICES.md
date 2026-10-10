@@ -19,3 +19,9 @@ URLs and hashes are in the corresponding vcpkg ports.
 The complete dependency copyright notices are copied from vcpkg into every
 platform package during CI. Upstream compatibility tests in `tests/upstream`
 are from openzim/node-libzim, GPL-3.0-or-later; their origin is recorded there.
+
+Bundled JavaScript helpers: p-limit and yocto-queue (MIT,
+https://github.com/sindresorhus/p-limit and
+https://github.com/sindresorhus/yocto-queue). Their complete licenses are included
+in `licenses/`. The release-only execa and semver helpers are development
+dependencies and are not included in the published library.

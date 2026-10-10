@@ -149,3 +149,18 @@ test("illustration metadata round-trips with dimensions, scale, and extra attrib
   expect(archive.getIllustrationInfos(16, 24, 2)).toHaveLength(1);
   expect(archive.getIllustrationInfos(16, 24, 3)).toHaveLength(0);
 });
+
+test("queued writes retain the first failure and finish rejects without hanging", async () => {
+  const creator = new Creator();
+  const item = new StringItem("before-start", "text/plain", "Before start", {}, "data");
+  const results = await Promise.allSettled([
+    creator.addItem(item),
+    creator.addItem(item),
+    creator.finishZimCreation(),
+  ]);
+  for (const result of results) {
+    expect(result.status).toBe("rejected");
+    if (result.status === "rejected" && results[0].status === "rejected")
+      expect(result.reason).toBe(results[0].reason);
+  }
+});

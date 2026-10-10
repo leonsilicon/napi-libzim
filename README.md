@@ -39,6 +39,12 @@ const search = new Searcher(archive).search(new Query("knowledge"));
 for (const hit of search.getResults(0, 10)) console.log(hit.path, hit.snippet);
 ```
 
+`p-limit` handles write scheduling and is bundled by Vite+ into both module
+formats. Helper packages are development dependencies only; the published
+package has no JavaScript runtime dependencies. Build/release scripts use
+`execa`, `semver`, and the napi-rs programmatic API. The release script is also
+bundled before it is uploaded for publishing.
+
 CommonJS (`require("napi-libzim")`) and TypeScript are also supported. To migrate
 from `@openzim/libzim`, change the import specifier. The API includes `Archive`,
 `OpenConfig`, `Entry`, `Item`, `Blob`, `Creator`, `StringItem`, `FileItem`,
@@ -74,7 +80,8 @@ optional dependencies enabled so the correct platform package is installed.
 ## Development
 
 Building this repository requires Git, Node.js, Vite+, Rust, and a C++17
-compiler. macOS requires Xcode command-line tools; Windows requires Visual
+compiler. macOS requires Xcode command-line tools and Homebrew `autoconf`, `automake`,
+`libtool`, `pkg-config`, and `ninja`; Windows requires Visual
 Studio's C++ build tools. Linux also needs `autoconf`, `automake`, `libtool`,
 `pkg-config`, and `ninja-build`. CMake/Meson are provisioned by vcpkg as needed.
 

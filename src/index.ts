@@ -1,4 +1,5 @@
 import { closeSync, fstatSync, openSync, readSync } from "node:fs";
+import pLimit from "p-limit";
 import * as native from "../binding/index.cjs";
 
 type Content = ArrayBuffer | Buffer | string;
@@ -281,27 +282,26 @@ export class OpenConfig {
 }
 export class Creator {
   #native = new native.NativeCreator();
-  #tail: Promise<void> = Promise.resolve();
-  #pending = 0;
+  #queue = pLimit(1);
+  #failure?: { error: unknown };
   #finishing = false;
   #enqueue(operation: () => void | Promise<void>): Promise<void> {
-    this.#pending++;
-    const next = this.#tail.then(operation);
-    this.#tail = next;
-    // Observe rejections immediately while preserving them for finish/next addItem.
-    void next.then(
-      () => {
-        this.#pending--;
-      },
-      () => {
-        this.#pending--;
-      },
-    );
+    const next = this.#queue(async () => {
+      if (this.#failure) throw this.#failure.error;
+      try {
+        await operation();
+      } catch (error) {
+        this.#failure = { error };
+        throw error;
+      }
+    });
+    // Synchronous metadata methods enqueue writes without returning a promise.
+    void next.catch(() => {});
     return next;
   }
   #write(operation: () => void): void {
     if (this.#finishing) throw new Error("Creator has already begun finishing");
-    if (this.#pending) {
+    if (this.#queue.activeCount + this.#queue.pendingCount) {
       void this.#enqueue(operation);
     } else operation();
   }

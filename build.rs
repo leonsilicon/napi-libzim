@@ -13,16 +13,25 @@ fn main() {
     };
     std::env::set_var("VCPKGRS_TRIPLET", triplet);
     let libzim = vcpkg::Config::new()
+        .cargo_metadata(false)
         .emit_includes(true)
         .find_package("libzim")
         .expect("Build bundled libzim first: vp run build:deps (see README.md)");
     let mut build = cxx_build::bridge("native/bridge.rs");
     build.file("native/bridge.cc").include(&root).std("c++17");
-    for include in libzim.include_paths {
+    for include in &libzim.include_paths {
         build.include(include);
     }
     // vcpkg's static libzim headers do not require DLL import/export annotations.
     build.define("LZMA_API_STATIC", None).compile("zim_bridge");
+    // Emit dependent static archives after the bridge so GNU linkers resolve
+    // references introduced by its C++ classes (including RTTI on ARM64).
+    for line in &libzim.cargo_metadata {
+        println!(
+            "{}",
+            line.replacen("cargo:rustc-link-lib=", "cargo:rustc-link-lib=static=", 1)
+        );
+    }
     if target.contains("windows") {
         for lib in ["rpcrt4", "ws2_32", "winmm", "shlwapi", "advapi32"] {
             println!("cargo:rustc-link-lib={lib}");

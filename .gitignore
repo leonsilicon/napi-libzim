@@ -22,3 +22,5 @@ binding/*.node
 platform-licenses
 release
 *.node
+
+.ci
