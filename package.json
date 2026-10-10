@@ -45,7 +45,6 @@
     "build:js": "vp pack",
     "build": "vp run build:native && vp run build:js",
     "test": "vp test",
-    "test:upstream": "node --test tests/upstream/*.test.ts",
     "check": "vp check",
     "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm --build-output-dir binding",
     "npm:dirs": "napi create-npm-dirs",

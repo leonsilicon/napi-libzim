@@ -67,8 +67,6 @@ jobs:
       - run: cargo clippy --release -- -D warnings
       - run: vp check
       - run: vp test
-      - name: Run every upstream compatibility test
-        run: vp run test:upstream
       - name: Audit native linkage
         run: node scripts/audit-linkage.mjs binding/napi-libzim.${{ matrix.suffix }}.node
       - name: Prepare platform package

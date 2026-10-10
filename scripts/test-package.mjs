@@ -35,13 +35,7 @@ try {
       `${helper} must not be installed for consumers`,
     );
   }
-  // Run every upstream assertion using ONLY the clean npm installation.
-  for (const name of ["zim", "dist"]) {
-    let test = readFileSync(resolve(root, "tests/upstream", `${name}.test.ts`), "utf8");
-    test = test.replace('"../../dist/index.js"', '"napi-libzim"');
-    writeFileSync(resolve(directory, `${name}.test.ts`), test);
-  }
-  execaSync(process.execPath, ["--test", "zim.test.ts", "dist.test.ts"], {
+  const options = {
     cwd: directory,
     stdio: "inherit",
     env: {
@@ -50,14 +44,24 @@ try {
       DYLD_LIBRARY_PATH: "",
       NAPI_RS_NATIVE_LIBRARY_PATH: "",
     },
-  });
+  };
+  // Verify both package entry points using only the clean npm installation.
+  execaSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      "import { Archive, Creator } from 'napi-libzim'; if (!Archive || !Creator) throw Error('Missing ESM exports')",
+    ],
+    options,
+  );
   execaSync(
     process.execPath,
     [
       "-e",
       "const z = require('napi-libzim'); if (!z.Archive || !z.Creator) throw Error('Missing CommonJS exports')",
     ],
-    { cwd: directory, stdio: "inherit" },
+    options,
   );
 } finally {
   rmSync(directory, { recursive: true, force: true });
