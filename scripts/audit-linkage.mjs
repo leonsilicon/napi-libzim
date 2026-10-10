@@ -27,7 +27,7 @@ if (process.platform === "darwin") {
   output = execaSync("dumpbin", ["/DEPENDENTS", binary], { encoding: "utf8" }).stdout;
   const dlls = output.match(/[\w.-]+\.dll/gi) ?? [];
   const allowed =
-    /^(kernel32|advapi32|user32|shell32|ole32|oleaut32|ws2_32|rpcrt4|winmm|shlwapi|bcrypt|ntdll|ucrtbase|vcruntime\d+(?:_\d+)?|msvcp\d+(?:_\d+)?|api-ms-win-[\w-]+)\.dll$/i;
+    /^(kernel32|advapi32|user32|shell32|ole32|oleaut32|ws2_32|rpcrt4|winmm|shlwapi|bcrypt|bcryptprimitives|ntdll|ucrtbase|vcruntime\d+(?:_\d+)?|msvcp\d+(?:_\d+)?|api-ms-win-[\w-]+)\.dll$/i;
   for (const dll of dlls) if (!allowed.test(dll)) throw new Error(`Unbundled dependency: ${dll}`);
 }
 process.stdout.write(output);
