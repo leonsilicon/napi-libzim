@@ -27,6 +27,14 @@ fn main() {
     // Emit dependent static archives after the bridge so GNU linkers resolve
     // references introduced by its C++ classes (including RTTI on ARM64).
     for line in &libzim.cargo_metadata {
+        // ICU's data archive can appear before icuuc in vcpkg's link order.
+        // GNU ld would otherwise leave icudt*_dat unresolved and accidentally
+        // borrow Node's ICU data, breaking when Node uses a different ICU version.
+        if line == "cargo:rustc-link-lib=icudata" || line == "cargo:rustc-link-lib=icudt" {
+            let library = line.strip_prefix("cargo:rustc-link-lib=").unwrap();
+            println!("cargo:rustc-link-lib=static:+whole-archive={library}");
+            continue;
+        }
         println!(
             "{}",
             line.replacen("cargo:rustc-link-lib=", "cargo:rustc-link-lib=static=", 1)

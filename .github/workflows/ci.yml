@@ -83,6 +83,13 @@ jobs:
         run: node scripts/stage-platform.mjs ${{ matrix.suffix }}
       - name: Test npm installation without build tools or install scripts
         run: node scripts/test-package.mjs ${{ matrix.suffix }}
+      - name: Select Node.js 22 for consumer compatibility checks
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Test clean installation on Node.js 22
+        run: node scripts/test-package.mjs ${{ matrix.suffix }}
       - uses: actions/upload-artifact@v4
         with:
           name: native-${{ matrix.suffix }}

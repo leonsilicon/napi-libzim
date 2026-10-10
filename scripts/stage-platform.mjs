@@ -32,5 +32,10 @@ for (const filename of ["LICENSE", "THIRD_PARTY_NOTICES.md"])
 cpSync(licenses, resolve(target, "licenses"), { recursive: true });
 const manifestPath = resolve(target, "package.json");
 const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-manifest.files = [...manifest.files, "licenses"];
+manifest.files = [
+  ...new Set([
+    ...manifest.files.filter((name) => name !== "licenses"),
+    ...readdirSync(resolve(target, "licenses")).map((name) => `licenses/${name}`),
+  ]),
+];
 writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);

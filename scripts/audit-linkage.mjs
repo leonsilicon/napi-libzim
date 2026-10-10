@@ -22,6 +22,11 @@ if (process.platform === "darwin") {
     const name = line.trim().split(/\s/)[0].split("/").pop();
     if (name && !allowed.test(name)) throw new Error(`Unbundled dependency: ${line}`);
   }
+  const undefinedSymbols = execaSync("nm", ["--dynamic", "--undefined-only", binary], {
+    encoding: "utf8",
+  }).stdout;
+  if (/\bicudt\d+_dat\b/.test(undefinedSymbols))
+    throw new Error("ICU data must be embedded; the addon must not borrow Node's ICU data");
 } else {
   // dumpbin is available after entering the MSVC development environment.
   output = execaSync("dumpbin", ["/DEPENDENTS", binary], { encoding: "utf8" }).stdout;

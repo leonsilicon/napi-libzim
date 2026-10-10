@@ -4,7 +4,7 @@ import { root } from "./package-utils.mjs";
 import { NapiCli } from "@napi-rs/cli";
 import { execaSync } from "execa";
 const napi = new NapiCli();
-const artifacts = resolve(root, "artifacts");
+const artifacts = resolve(root, process.argv[2] ?? "artifacts");
 const source = resolve(artifacts, "native-darwin-arm64", "binding");
 // The Rust declarations and platform loader are the same on every target.
 for (const name of ["index.cjs", "index.d.cts"]) {
@@ -16,7 +16,7 @@ for (const name of ["index.cjs", "index.d.cts"]) {
   cpSync(resolve(source, name), resolve(root, "binding", name));
 }
 await napi.createNpmDirs({ cwd: root });
-await napi.artifacts({ cwd: root, outputDir: "artifacts", npmDir: "npm" });
+await napi.artifacts({ cwd: root, outputDir: artifacts, npmDir: "npm" });
 for (const suffix of readdirSync(resolve(root, "npm"))) {
   const target = resolve(root, "npm", suffix);
   cpSync(resolve(artifacts, `native-${suffix}`, "platform-licenses"), resolve(target, "licenses"), {
@@ -24,7 +24,12 @@ for (const suffix of readdirSync(resolve(root, "npm"))) {
   });
   const manifestPath = resolve(target, "package.json");
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-  manifest.files = [...new Set([...manifest.files, "licenses"])];
+  manifest.files = [
+    ...new Set([
+      ...manifest.files.filter((name) => name !== "licenses"),
+      ...readdirSync(resolve(target, "licenses")).map((name) => `licenses/${name}`),
+    ]),
+  ];
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 }
 execaSync("vp", ["run", "build:js"], { cwd: root, stdio: "inherit" });
