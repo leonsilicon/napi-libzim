@@ -114,7 +114,7 @@ jobs:
       - name: Assemble napi-rs platform packages
         run: node scripts/assemble-packages.mjs
       - name: Check release contents
-        run: vp exec napi pre-publish --dry-run --root-publisher npm
+        run: vp exec napi pre-publish --dry-run --no-gh-release --root-publisher npm
       - name: Pack all npm packages
         run: node scripts/pack-release.mjs
       - name: Test bundled release script without node_modules
