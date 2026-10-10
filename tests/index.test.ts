@@ -21,7 +21,11 @@ function fixture(): string {
   directories.push(directory);
   return directory;
 }
-afterEach(() => {
+afterEach(async () => {
+  // libzim's Windows readers prevent deletion until their native finalizers
+  // close the file handles. Release unreachable test objects before cleanup.
+  globalThis.gc?.();
+  await new Promise<void>((resolve) => setImmediate(resolve));
   for (const directory of directories.splice(0))
     rmSync(directory, { recursive: true, force: true });
 });

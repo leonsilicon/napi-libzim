@@ -4,7 +4,7 @@ export default defineConfig({
   staged: {
     "*": "vp check --fix",
   },
-  test: { include: ["tests/*.test.ts"] },
+  test: { include: ["tests/*.test.ts"], execArgv: ["--expose-gc"] },
   pack: [
     {
       entry: ["src/index.ts"],
