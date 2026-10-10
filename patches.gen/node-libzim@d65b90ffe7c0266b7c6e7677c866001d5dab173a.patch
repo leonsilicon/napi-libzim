@@ -1,7 +1,18 @@
 ===================================================================
 --- a/dist.test.ts
 +++ b/dist.test.ts
-@@ -13,9 +13,9 @@
+@@ -1,9 +1,9 @@
++import * as libzim from "napi-libzim";
+ import assert from "node:assert/strict";
+ import { describe, it } from "node:test";
+ import {
+   Archive,
+-  Blob,
+   Compression,
+   Creator,
+   Entry,
+   FileItem,
+@@ -13,17 +13,17 @@
    Searcher,
    StringItem,
    StringProvider,
@@ -12,10 +23,29 @@
  describe("libzim dist", () => {
    it("should have all the functions", () => {
      assert(Archive);
+     assert(Entry);
+     assert(IntegrityCheck);
+     assert(Compression);
+-    assert(Blob);
++    assert.equal("Blob" in libzim, false);
+     assert(Searcher);
+     assert(Query);
+     assert(SuggestionSearcher);
+     assert(Creator);
 ===================================================================
 --- a/zim.test.ts
 +++ b/zim.test.ts
-@@ -27,9 +27,9 @@
+@@ -11,9 +11,8 @@
+   mock,
+ } from "node:test";
+ import {
+   Archive,
+-  Blob,
+   Compression,
+   Creator,
+   IllustrationInfo,
+   IntegrityCheck,
+@@ -27,9 +26,9 @@
    type WriterItem,
    getClusterCacheCurrentSize,
    getClusterCacheMaxSize,
@@ -26,3 +56,225 @@
  describe("IntegrityCheck", () => {
    it("is exported with symbols", () => {
      const integrityCheckKeys = Object.keys(IntegrityCheck);
+@@ -57,20 +56,20 @@
+     }
+   });
+ });
+ 
+-describe("Blob", () => {
+-  it("constructs a blob", () => {
+-    const blob = new Blob();
++describe("Uint8Array content", () => {
++  it("constructs empty bytes", () => {
++    const blob = new Uint8Array();
+     assert(blob);
+   });
+ 
+   it("returns proper data", () => {
+     const str = "hello world";
+-    const blob = new Blob(str);
+-    assert.equal(blob.size, str.length);
+-    assert.equal(blob.data.length, str.length);
+-    assert.equal(blob.data.toString(), str);
++    const blob = new TextEncoder().encode(str);
++    assert.equal(blob.byteLength, str.length);
++    assert.equal(blob.length, str.length);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(blob), str);
+   });
+ });
+ 
+ describe("StringProvider", () => {
+@@ -81,15 +80,15 @@
+     assert.equal(provider.size, str.length);
+ 
+     let feed = provider.feed();
+     assert(feed);
+-    assert.equal(feed.size, str.length);
+-    assert.equal(feed.data.toString(), str);
++    assert.equal(feed.byteLength, str.length);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(feed), str);
+ 
+     feed = provider.feed();
+     assert(feed);
+-    assert.equal(feed.size, 0);
+-    assert.equal(feed.data.toString(), "");
++    assert.equal(feed.byteLength, 0);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(feed), "");
+   });
+ });
+ 
+ describe("StringItem", () => {
+@@ -114,15 +113,15 @@
+     assert.equal(contentProvider.size, content.length);
+ 
+     let feed = contentProvider.feed();
+     assert(feed);
+-    assert.equal(feed.size, content.length);
+-    assert.equal(feed.data.toString(), content);
++    assert.equal(feed.byteLength, content.length);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(feed), content);
+ 
+     feed = contentProvider.feed();
+     assert(feed);
+-    assert.equal(feed.size, 0);
+-    assert.equal(feed.data.toString(), "");
++    assert.equal(feed.byteLength, 0);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(feed), "");
+   });
+ 
+   it("constructs a StringItem from a Buffer", () => {
+     const content = Buffer.from("abc\0def");
+@@ -140,15 +139,15 @@
+     assert.equal(contentProvider.size, content.length);
+ 
+     let feed = contentProvider.feed();
+     assert(feed);
+-    assert.equal(feed.size, content.length);
+-    assert.equal(content.equals(feed.data), true);
++    assert.equal(feed.byteLength, content.length);
++    assert.equal(content.equals(feed), true);
+ 
+     feed = contentProvider.feed();
+     assert(feed);
+-    assert.equal(feed.size, 0);
+-    assert.equal(feed.data.toString(), "");
++    assert.equal(feed.byteLength, 0);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(feed), "");
+   });
+ });
+ 
+ describe("Creator", () => {
+@@ -209,11 +208,11 @@
+             size: content.length,
+             feed() {
+               if (!dataSent) {
+                 dataSent = true;
+-                return new Blob(content);
++                return new TextEncoder().encode(content);
+               }
+-              return new Blob();
++              return new Uint8Array();
+             },
+           };
+         },
+       });
+@@ -289,11 +288,11 @@
+             size: content.length,
+             feed() {
+               if (!sent) {
+                 sent = true;
+-                return new Blob(content);
++                return new TextEncoder().encode(content);
+               }
+-              return new Blob();
++              return new Uint8Array();
+             },
+           };
+         },
+       });
+@@ -364,11 +363,11 @@
+             size: content.length,
+             feed() {
+               if (!sent) {
+                 sent = true;
+-                return new Blob(content);
++                return new TextEncoder().encode(content);
+               }
+-              return new Blob();
++              return new Uint8Array();
+             },
+           };
+         },
+       });
+@@ -519,11 +518,11 @@
+             size: data.length,
+             feed() {
+               if (!sent) {
+                 sent = true;
+-                return new Blob(data);
++                return new TextEncoder().encode(data);
+               }
+-              return new Blob();
++              return new Uint8Array();
+             },
+           };
+         },
+       })),
+@@ -611,17 +610,17 @@
+       assert.equal(archive.getMetadata(k), v);
+ 
+       const item = archive.getMetadataItem(k);
+       assert.equal(item.title, k);
+-      assert.equal(item.data.data.toString(), v);
++      assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(item.data), v);
+       assert.equal(item.size, v.length);
+       assert.equal(item.mimetype.length > 3, true);
+     }
+ 
+     assert.equal(archive.hasIllustration(png_size), true);
+     const illustration = archive.getIllustrationItem(png_size);
+-    assert.equal(illustration.data.data.toString().startsWith(png), true);
+-    assert.equal(illustration.data.data.toString(), png);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(illustration.data).startsWith(png), true);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(illustration.data), png);
+     assert.equal(illustration.size >= png.length, true);
+     assert.equal(archive.illustrationSizes.has(png_size), true);
+ 
+     // Only 1 png added
+@@ -633,9 +632,9 @@
+     // That 1 png should be retrievable again using the info
+     const il1 = archive.getIllustrationItem(infos[0]);
+     assert(il1);
+     assert.deepEqual(il1, illustration);
+-    assert.equal(il1.data.data.toString(), png);
++    assert.equal(new TextDecoder("utf-8", { ignoreBOM: true }).decode(il1.data), png);
+ 
+     // Matching illustration
+     assert.equal(
+       archive.getIllustrationInfos(
+@@ -736,11 +735,11 @@
+ 
+       const hash = crypto.createHash("md5").update(entry.title).digest();
+       assert.equal(hash.length, 16); // md5 size is 16 bytes
+ 
+-      const data = entry.item.data.data;
+-      assert.equal(entry.item.data.size, hash.length);
+-      assert.deepEqual(data, hash);
++      const data = entry.item.data;
++      assert.equal(entry.item.data.byteLength, hash.length);
++      assert.deepEqual(data, new Uint8Array(hash));
+     }
+   });
+ 
+   it("verifies that blobs containing and ending in null were stored correctly from the archive", () => {
+@@ -750,24 +749,24 @@
+     for (const nb of null_blobs) {
+       const contentProvider = nb.getContentProvider();
+       const feed = contentProvider.feed();
+       assert(feed);
+-      assert.equal(feed.size > 0, true);
++      assert.equal(feed.byteLength > 0, true);
+       if (nb.path === "null_blob_1") {
+         // 4th byte is null, last byte is not
+-        assert.equal(feed.data[5], 0);
+-        assert.notEqual(feed.data[feed.data.length - 1], 0);
++        assert.equal(feed[5], 0);
++        assert.notEqual(feed[feed.length - 1], 0);
+       } else if (nb.path === "null_blob_2") {
+         // last byte is null
+-        assert.equal(feed.data[feed.data.length - 1], 0);
++        assert.equal(feed[feed.length - 1], 0);
+       }
+ 
+       const entry = Array.from(archive.findByPath(nb.path))[0];
+       assert(entry);
+       assert.equal(entry.title, nb.title);
+ 
+-      assert.equal(entry.item.data.size, feed.data.length);
+-      assert.deepEqual(entry.item.data.data, feed.data);
++      assert.equal(entry.item.data.byteLength, feed.length);
++      assert.deepEqual(entry.item.data, feed);
+     }
+   });
+ 
+   describe("Searcher", () => {

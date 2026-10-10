@@ -12,8 +12,19 @@ preserves all other source with MagicString, and generates a unified diff using
 the npm `diff` package. `patches.gen/node-libzim@<commit>.patch` is checked in for
 review. CI fails if the upstream source or generated patch drifts.
 
-The patch only changes imports to `napi-libzim`; no tests or assertions are
-removed, skipped, or weakened. Runtime copies go into ignored `.upstream-tests`
+The patch changes imports to `napi-libzim` and adapts the upstream Blob/Buffer
+contract to Uint8Array using `scripts/upstream-uint8array.mjs`:
+
+- Blob construction becomes TextEncoder encoding or an empty Uint8Array.
+- Nested byte access becomes direct access; byte counts use `byteLength`.
+- Text assertions use TextDecoder, preserving the original UTF-8 BOM behavior.
+- The crypto Buffer comparison converts its expected value to Uint8Array;
+  Buffer inputs remain covered by the original StringItem test.
+- The distribution test checks that the removed Blob export is absent.
+
+All 26 tests still run. Assertions continue to check sizes, exact bytes, text,
+embedded/trailing NULs, and all unrelated API behavior. No tests are skipped.
+Runtime copies go into ignored `.upstream-tests`
 directories, so the same patch works for this repository and clean installs.
 The pristine files are excluded from TypeScript checks because their original
 imports target upstream's directory layout; generated tests use our actual types.

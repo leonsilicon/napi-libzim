@@ -20,8 +20,9 @@ The complete dependency copyright notices are copied from vcpkg into every
 platform package during CI. Upstream compatibility tests in `tests/upstream`
 are from openzim/node-libzim, GPL-3.0-or-later; their origin is recorded there.
 
-Bundled JavaScript helpers: p-limit and yocto-queue (MIT,
+Bundled JavaScript helpers: p-limit, yocto-queue, and uint8array-extras (MIT,
 https://github.com/sindresorhus/p-limit and
-https://github.com/sindresorhus/yocto-queue). Their complete licenses are included
+https://github.com/sindresorhus/yocto-queue, and
+https://github.com/sindresorhus/uint8array-extras). Their complete licenses are included
 in `licenses/`. The release-only execa and semver helpers are development
 dependencies and are not included in the published library.

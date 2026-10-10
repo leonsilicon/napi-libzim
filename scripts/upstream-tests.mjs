@@ -8,6 +8,7 @@ import { applyPatch, createTwoFilesPatch, parsePatch } from "diff";
 import { execaSync } from "execa";
 import MagicString from "magic-string";
 import { root } from "./package-utils.mjs";
+import { patchUint8Array } from "./upstream-uint8array.mjs";
 
 const upstream = resolve(root, "tests/upstream");
 const manifest = JSON.parse(readFileSync(resolve(upstream, "upstream.json"), "utf8"));
@@ -37,7 +38,7 @@ export function prepareUpstreamTests(directory, { updatePatch = false } = {}) {
       entry.sha256,
       `${filename}: pristine upstream source changed; review and update the pinned source`,
     );
-    const patched = patchImports(filename, source, entry.import);
+    const patched = patchUint8Array(filename, patchImports(filename, source, entry.import));
     return { filename, source, patched };
   });
   const generated = files

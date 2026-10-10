@@ -1,13 +1,14 @@
 import { closeSync, fstatSync, openSync, readSync } from "node:fs";
 import pLimit from "p-limit";
+import { concatUint8Arrays, isUint8Array, stringToUint8Array } from "uint8array-extras";
 import * as native from "../binding/index.cjs";
 
-type Content = ArrayBuffer | Buffer | string;
-function buffer(content: Content): Buffer {
-  if (typeof content === "string") return Buffer.from(content);
-  if (content instanceof ArrayBuffer) return Buffer.from(new Uint8Array(content));
-  if (Buffer.isBuffer(content)) return Buffer.from(content);
-  throw new TypeError("Content must be a string, Buffer, or ArrayBuffer");
+export type Content = ArrayBuffer | Uint8Array | string;
+function bytes(content: Content): Uint8Array {
+  if (typeof content === "string") return stringToUint8Array(content);
+  if (content instanceof ArrayBuffer) return new Uint8Array(content).slice();
+  if (isUint8Array(content)) return new Uint8Array(content);
+  throw new TypeError("Content must be a string, Uint8Array, or ArrayBuffer");
 }
 function unsigned(value: number | bigint, name = "value"): bigint {
   if (typeof value === "number" && (!Number.isSafeInteger(value) || value < 0))
@@ -46,30 +47,15 @@ export class Compression {
   static readonly None = Symbol("None");
   static readonly Zstd = Symbol("Zstd");
 }
-export class Blob {
-  #data: Buffer;
-  constructor(content: Content = "") {
-    this.#data = buffer(content);
-  }
-  get data(): Buffer {
-    return Buffer.from(this.#data);
-  }
-  get size(): number {
-    return this.#data.length;
-  }
-  toString(): string {
-    return this.#data.toString();
-  }
-}
 export interface ContentProvider {
   readonly size: number | bigint;
-  feed(): Blob;
+  feed(): Uint8Array;
 }
 export class StringProvider implements ContentProvider {
-  #data: Buffer;
+  #data: Uint8Array;
   #sent = false;
   constructor(content: Content) {
-    this.#data = buffer(content);
+    this.#data = bytes(content);
   }
   get size(): number {
     return this.#data.length;
@@ -77,10 +63,10 @@ export class StringProvider implements ContentProvider {
   getSize(): number {
     return this.size;
   }
-  feed(): Blob {
-    if (this.#sent) return new Blob();
+  feed(): Uint8Array {
+    if (this.#sent) return new Uint8Array();
     this.#sent = true;
-    return new Blob(this.#data);
+    return this.#data.slice();
   }
 }
 const fileFinalizer = new FinalizationRegistry<number>((fd) => {
@@ -106,9 +92,9 @@ export class FileProvider implements ContentProvider {
   getSize(): number {
     return this.size;
   }
-  feed(): Blob {
-    if (this.#fd === undefined) return new Blob();
-    const data = Buffer.alloc(Math.min(1024 * 1024, this.#size - this.#offset));
+  feed(): Uint8Array {
+    if (this.#fd === undefined) return new Uint8Array();
+    const data = new Uint8Array(Math.min(1024 * 1024, this.#size - this.#offset));
     const read = readSync(this.#fd, data, 0, data.length, this.#offset);
     this.#offset += read;
     if (this.#offset >= this.#size || read === 0) {
@@ -116,7 +102,7 @@ export class FileProvider implements ContentProvider {
       this.#fd = undefined;
       fileFinalizer.unregister(this);
     }
-    return new Blob(data.subarray(0, read));
+    return data.subarray(0, read);
   }
 }
 export interface Hint {
@@ -144,13 +130,13 @@ export class StringItem implements WriterItem {
   #mimeType: string;
   #title: string;
   #hints: Hint;
-  #content: Buffer;
+  #content: Uint8Array;
   constructor(path: string, mimeType: string, title: string, hints: Hint, content: Content) {
     this.#path = String(path);
     this.#mimeType = String(mimeType);
     this.#title = title == null ? "" : String(title);
     this.#hints = { ...hints };
-    this.#content = buffer(content);
+    this.#content = bytes(content);
   }
   get path(): string {
     return this.#path;
@@ -197,22 +183,23 @@ export class FileItem implements WriterItem {
     return new FileProvider(filePaths.get(this)!);
   }
 }
-function consume(content: string | ContentProvider | Buffer): Buffer {
-  if (typeof content === "string" || Buffer.isBuffer(content)) return buffer(content);
+function consume(content: Content | ContentProvider): Uint8Array {
+  if (typeof content === "string" || isUint8Array(content) || content instanceof ArrayBuffer)
+    return bytes(content);
   const expected = unsigned(content.size, "Provider size");
-  const chunks: Buffer[] = [];
+  const chunks: Uint8Array[] = [];
   let total = 0n;
   for (;;) {
-    const blob = content.feed();
-    if (!(blob instanceof Blob)) throw new TypeError("ContentProvider.feed() must return a Blob");
-    const data = blob.data;
+    const data = content.feed();
+    if (!isUint8Array(data)) throw new TypeError("ContentProvider.feed() must return a Uint8Array");
     if (data.length === 0) break;
     total += BigInt(data.length);
     if (total > expected) throw new Error("ContentProvider returned more bytes than its size");
-    chunks.push(data);
+    // Providers may reuse a working buffer on their next feed().
+    chunks.push(new Uint8Array(data));
   }
   if (total !== expected) throw new Error("ContentProvider returned fewer bytes than its size");
-  return Buffer.concat(chunks);
+  return concatUint8Arrays(chunks);
 }
 export interface IIllustrationInfo {
   width?: number;
@@ -338,7 +325,7 @@ export class Creator {
         title = item.title == null ? "" : String(item.title);
       const filePath = item instanceof FileItem ? filePaths.get(item) : undefined;
       const content =
-        filePath === undefined ? consume(item.getContentProvider()) : Buffer.from(filePath);
+        filePath === undefined ? consume(item.getContentProvider()) : stringToUint8Array(filePath);
       const index = item.getIndexData?.();
       if (index?.position && index.position.length < 3)
         throw new Error("position must have a length of 3");
@@ -373,13 +360,16 @@ export class Creator {
   }
   addMetadata(
     name: string,
-    content: string | ContentProvider,
+    content: Content | ContentProvider,
     mimetype = "text/plain;charset=utf-8",
   ): void {
     const data = consume(content);
     this.#write(() => this.#native.metadata(name, data, mimetype));
   }
-  addIllustration(sizeOrInfo: number | IIllustrationInfo, content: string | ContentProvider): void {
+  addIllustration(
+    sizeOrInfo: number | IIllustrationInfo,
+    content: Content | ContentProvider,
+  ): void {
     const data = consume(content);
     if (typeof sizeOrInfo === "number")
       this.#write(() => this.#native.illustration(sizeOrInfo, data));
@@ -416,7 +406,8 @@ export class Creator {
     this.#write(() => this.#native.mainPath(path));
   }
   setUuid(uuid: string): void {
-    if (Buffer.byteLength(uuid) !== 16) throw new Error("uuid must be 16 characters long");
+    if (stringToUint8Array(uuid).byteLength !== 16)
+      throw new Error("uuid must be 16 characters long");
     this.#write(() => this.#native.uuid(uuid));
   }
   finishZimCreation(): Promise<void> {
@@ -447,15 +438,13 @@ export class Item {
   get index(): number {
     return this.#native.info().index;
   }
-  get data(): Blob {
+  get data(): Uint8Array {
     return this.getData();
   }
-  getData(offset: number | bigint = 0, limit?: number | bigint): Blob {
-    return new Blob(
-      this.#native.data(
-        unsigned(offset, "Offset"),
-        limit === undefined ? 0xffffffffffffffffn : unsigned(limit, "Size"),
-      ),
+  getData(offset: number | bigint = 0, limit?: number | bigint): Uint8Array {
+    return this.#native.data(
+      unsigned(offset, "Offset"),
+      limit === undefined ? 0xffffffffffffffffn : unsigned(limit, "Size"),
     );
   }
   get directAccessInformation(): { filename: string; offset: number; isValid: boolean } {

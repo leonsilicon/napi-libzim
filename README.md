@@ -1,7 +1,8 @@
 # napi-libzim
 
 A napi-rs wrapper around [libzim](https://github.com/openzim/libzim), with the
-JavaScript API of [@openzim/libzim](https://github.com/openzim/node-libzim).
+JavaScript API of [@openzim/libzim](https://github.com/openzim/node-libzim),
+adapted to use standard `Uint8Array` values for binary content.
 The native addon statically includes libzim 9.8.2, Xapian, ICU, liblzma,
 Zstandard, and their dependencies. Installing a published package requires no
 Rust/C++ toolchain, libzim installation, library-path configuration, or
@@ -34,24 +35,46 @@ await creator.finishZimCreation();
 
 const archive = new Archive("example.zim");
 for (const entry of archive.iterByPath()) console.log(entry.path, entry.title);
-console.log(archive.mainEntry.getItem(true).data.toString());
+console.log(new TextDecoder().decode(archive.mainEntry.getItem(true).data));
 const search = new Searcher(archive).search(new Query("knowledge"));
 for (const hit of search.getResults(0, 10)) console.log(hit.path, hit.snippet);
 ```
 
-`p-limit` handles write scheduling and is bundled by Vite+ into both module
+`p-limit` handles write scheduling and `uint8array-extras` handles byte-array
+validation and concatenation. Both are bundled by Vite+ into both module
 formats. Helper packages are development dependencies only; the published
 package has no JavaScript runtime dependencies. Build/release scripts use
 `execa`, `semver`, and the napi-rs programmatic API. The release script is also
 bundled before it is uploaded for publishing.
 
 CommonJS (`require("napi-libzim")`) and TypeScript are also supported. To migrate
-from `@openzim/libzim`, change the import specifier. The API includes `Archive`,
-`OpenConfig`, `Entry`, `Item`, `Blob`, `Creator`, `StringItem`, `FileItem`,
+from `@openzim/libzim`, change the import specifier and adapt binary content
+access as shown below. The API includes `Archive`,
+`OpenConfig`, `Entry`, `Item`, `Creator`, `StringItem`, `FileItem`,
 `StringProvider`, `FileProvider`, `IllustrationInfo`, `IntegrityCheck`,
 `Compression`, `Query`, `Searcher`, `SuggestionSearcher`, search results,
 iterable entry ranges, and cache controls. Compression and integrity constants
 are symbols, matching the original binding. Binary content preserves NUL bytes.
+
+`Item.data`, `Item.getData()`, and content providers' `feed()` return plain
+`Uint8Array` values synchronously. There is no custom `Blob` export. Inputs to
+`StringItem`, `StringProvider`, `Creator.addMetadata()`, and
+`Creator.addIllustration()` accept strings, Uint8Arrays (including Node Buffers),
+and ArrayBuffers. Providers still declare their total byte count using `size`;
+custom providers return Uint8Array chunks and an empty Uint8Array at EOF.
+
+| Existing node-libzim usage     | napi-libzim usage                     |
+| ------------------------------ | ------------------------------------- |
+| `item.data.data`               | `item.data`                           |
+| `item.data.size`               | `item.data.byteLength`                |
+| `item.data.toString()`         | `new TextDecoder().decode(item.data)` |
+| `new Blob(text)` in a provider | `new TextEncoder().encode(text)`      |
+| `new Blob()` at EOF            | `new Uint8Array()`                    |
+
+Input bytes are copied before queued writes. Reading item data returns owned
+bytes; mutating them does not change the archive. Strings are encoded as UTF-8.
+For text decoding that preserves a leading UTF-8 BOM like Buffer did, use
+`new TextDecoder("utf-8", { ignoreBOM: true })`.
 
 `addItem()` and `finishZimCreation()` return promises and run native writing on
 Node's worker pool. Pending writes are ordered; finishing waits for them.
@@ -105,7 +128,7 @@ No system libzim is used.
 `tests/upstream` contains every assertion from node-libzim's main test suite
 and distribution test at commit `d65b90ffe7c0266b7c6e7677c866001d5dab173a`.
 The files remain pristine. `vp run test:upstream` verifies their hashes and
-applies a reviewed import patch before running every test. A TypeScript AST
+applies a reviewed import and Uint8Array adaptation patch before running every test. A TypeScript AST
 codemod generates the committed diff in `patches.gen`; regenerate it with
 `vp run patch:upstream`. See [the patching workflow](tests/upstream/README.md).
 The local tests exercise binary slices,

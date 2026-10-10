@@ -35,8 +35,10 @@ try {
     "execa",
     "semver",
     "@babel/parser",
+    "@babel/traverse",
     "diff",
     "magic-string",
+    "uint8array-extras",
   ]) {
     assert.equal(
       existsSync(resolve(directory, "node_modules", helper)),
@@ -69,7 +71,7 @@ try {
     process.execPath,
     [
       "-e",
-      "const z = require('napi-libzim'); if (!z.Archive || !z.Creator) throw Error('Missing CommonJS exports')",
+      "const z = require('napi-libzim'); if (!z.Archive || !z.Creator || 'Blob' in z) throw Error('Invalid CommonJS exports'); const bytes = new z.StringProvider(new Uint8Array([0, 255])).feed(); if (bytes.constructor !== Uint8Array || bytes[0] !== 0 || bytes[1] !== 255) throw Error('Invalid CommonJS bytes')",
     ],
     options,
   );

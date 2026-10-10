@@ -297,7 +297,7 @@ impl NativeItem {
         })
     }
     #[napi]
-    pub fn data(&self, offset: BigInt, limit: BigInt) -> Result<Buffer> {
+    pub fn data(&self, offset: BigInt, limit: BigInt) -> Result<Uint8Array> {
         Ok(result(self.inner.data(uint64(offset)?, uint64(limit)?))?.into())
     }
     #[napi]
@@ -445,7 +445,7 @@ impl NativeCreator {
         path: String,
         mime: String,
         title: String,
-        content: Buffer,
+        content: Uint8Array,
         file: bool,
         compress: i64,
         front: i64,
@@ -464,15 +464,15 @@ impl NativeCreator {
         })
     }
     #[napi]
-    pub fn metadata(&self, key: String, content: Buffer, mime: String) -> Result<()> {
+    pub fn metadata(&self, key: String, content: Uint8Array, mime: String) -> Result<()> {
         result(lock(&self.inner)?.pin_mut().metadata(&key, &content, &mime))
     }
     #[napi]
-    pub fn illustration(&self, size: u32, content: Buffer) -> Result<()> {
+    pub fn illustration(&self, size: u32, content: Uint8Array) -> Result<()> {
         result(lock(&self.inner)?.pin_mut().illustration(size, &content))
     }
     #[napi]
-    pub fn illustration_info(&self, info: Illustration, content: Buffer) -> Result<()> {
+    pub fn illustration_info(&self, info: Illustration, content: Uint8Array) -> Result<()> {
         result(
             lock(&self.inner)?
                 .pin_mut()

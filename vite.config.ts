@@ -12,8 +12,8 @@ export default defineConfig({
       fixedExtension: false,
       deps: {
         neverBundle: [/binding\/index\.cjs$/],
-        alwaysBundle: ["p-limit", "yocto-queue"],
-        onlyBundle: ["p-limit", "yocto-queue"],
+        alwaysBundle: ["p-limit", "yocto-queue", "uint8array-extras"],
+        onlyBundle: ["p-limit", "yocto-queue", "uint8array-extras"],
       },
       dts: { tsgo: {} },
       exports: false,

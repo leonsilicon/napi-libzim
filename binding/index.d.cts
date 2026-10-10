@@ -38,10 +38,10 @@ export declare class NativeCreator {
   constructor()
   configure(kind: number, value: bigint, language: string): void
   start(path: string): void
-  addItem(path: string, mime: string, title: string, content: Buffer, file: boolean, compress: number, front: number, index: IndexData): Promise<void>
-  metadata(key: string, content: Buffer, mime: string): void
-  illustration(size: number, content: Buffer): void
-  illustrationInfo(info: Illustration, content: Buffer): void
+  addItem(path: string, mime: string, title: string, content: Uint8Array, file: boolean, compress: number, front: number, index: IndexData): Promise<void>
+  metadata(key: string, content: Uint8Array, mime: string): void
+  illustration(size: number, content: Uint8Array): void
+  illustrationInfo(info: Illustration, content: Uint8Array): void
   redirect(path: string, title: string, target: string, alias: boolean, compress: number, front: number): void
   mainPath(path: string): void
   uuid(uuid: string): void
@@ -56,7 +56,7 @@ export declare class NativeEntry {
 
 export declare class NativeItem {
   info(): ItemInfo
-  data(offset: bigint, limit: bigint): Buffer
+  data(offset: bigint, limit: bigint): Uint8Array
   directAccess(): DirectAccess
 }
 
