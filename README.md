@@ -142,11 +142,42 @@ It checks that JavaScript helpers are bundled and audits dynamic linkage to reje
 compression, or search libraries. Pull requests and main pushes upload the
 platform bindings and complete npm tarballs as artifacts.
 
-To publish, set the package/Cargo versions together, configure the repository's
-`npm` environment and `NPM_TOKEN` secret (or npm trusted publishing), then push a
-matching `v<version>` tag. The workflow waits for all five native builds and
+Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
+with GitHub's OIDC identity. The `publish` job grants `id-token: write`, uses
+npm 11.21.0 on a GitHub-hosted runner, and publishes verified tarballs without
+installing project dependencies. No `NPM_TOKEN` or `NODE_AUTH_TOKEN` is used.
+The GitHub `npm` environment permits release tags matching `v*`.
+
+For the one-time npm setup, each of the six packages must already exist in the
+registry. Publish the initial verified release using an npm account with package
+write access, then log in with `npm login` and run:
+
+```sh
+vp run setup:trusted-publishing --dry-run  # inspect the six configurations
+vp run setup:trusted-publishing            # npm will request account 2FA
+```
+
+The command derives the five platform package names from napi-rs's target
+configuration and registers these exact settings for every package:
+
+| Setting           | Value               |
+| ----------------- | ------------------- |
+| GitHub owner      | `leonsilicon`       |
+| Repository        | `napi-libzim`       |
+| Workflow filename | `ci.yml`            |
+| Environment       | `npm`               |
+| Permission        | Allow `npm publish` |
+
+The values are recorded in `.github/npm-trusted-publisher.json`. Setup requires
+npm >=11.15.0 and 2FA; configuring GitHub alone does not activate npm trust.
+New trusted-publisher configurations need a successful OIDC publish within two
+days or npm expires them. See [npm's setup requirements](https://docs.npmjs.com/cli/v11/commands/npm-trust/)
+and [configuration expiry](https://docs.npmjs.com/trusted-publishers/#trusted-publisher-configuration-expiry).
+
+After npm setup, set the package/Cargo versions together and push a matching
+`v<version>` tag. The workflow waits for all five native builds and
 package checks, publishes platform packages first, then publishes the root
-package. A normal push to main does not publish to npm. No registry credentials
+package with provenance. A normal push to main does not publish to npm. No registry credentials
 are needed to build or test.
 
 ## License

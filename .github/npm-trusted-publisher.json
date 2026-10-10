@@ -1,0 +1,6 @@
+{
+  "repository": "leonsilicon/napi-libzim",
+  "workflow": "ci.yml",
+  "environment": "npm",
+  "registry": "https://registry.npmjs.org"
+}

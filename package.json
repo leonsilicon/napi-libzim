@@ -47,6 +47,7 @@
     "test": "vp test",
     "test:upstream": "node scripts/upstream-tests.mjs && vp exec tsc --project tsconfig.upstream.json",
     "patch:upstream": "node scripts/upstream-tests.mjs --update-patch",
+    "setup:trusted-publishing": "node scripts/setup-trusted-publishing.mjs",
     "check": "vp check",
     "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm --build-output-dir binding",
     "npm:dirs": "napi create-npm-dirs",

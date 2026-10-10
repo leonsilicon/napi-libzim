@@ -1,4 +1,5 @@
-# Keep hash-pinned source and generated diffs identical on Windows checkouts.
+# Keep formatting and hash-pinned source identical on Windows checkouts.
+* text=auto eol=lf
 tests/upstream/*.test.ts text eol=lf
 # Unified diffs prefix empty context lines with a space.
 patches.gen/*.patch text eol=lf whitespace=-blank-at-eol
