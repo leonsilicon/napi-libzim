@@ -14,7 +14,7 @@ import {
   StringItem,
   StringProvider,
   SuggestionSearcher,
-} from "../../dist/index.js";
+} from "../dist/index.js";
 
 describe("libzim dist", () => {
   it("should have all the functions", () => {

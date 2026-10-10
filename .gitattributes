@@ -1,0 +1,3 @@
+# Keep hash-pinned source and generated diffs identical on Windows checkouts.
+tests/upstream/*.test.ts text eol=lf
+patches.gen/*.patch text eol=lf

@@ -1,0 +1,5 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [".upstream-tests/*.test.ts"],
+  "exclude": ["node_modules"]
+}

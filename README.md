@@ -91,6 +91,7 @@ vp run build:deps  # builds the pinned native dependencies; cached after first r
 vp run build       # napi-rs addon, generated loader/types, ESM/CommonJS facade
 vp check
 vp test
+vp run test:upstream
 cargo fmt --check
 ```
 
@@ -103,14 +104,17 @@ No system libzim is used.
 
 `tests/upstream` contains every assertion from node-libzim's main test suite
 and distribution test at commit `d65b90ffe7c0266b7c6e7677c866001d5dab173a`.
-Only import paths are changed. The upstream suite is disabled and retained
-for reference; it is excluded from test runs, CI, and TypeScript checks.
+The files remain pristine. `vp run test:upstream` verifies their hashes and
+applies a reviewed import patch before running every test. A TypeScript AST
+codemod generates the committed diff in `patches.gen`; regenerate it with
+`vp run patch:upstream`. See [the patching workflow](tests/upstream/README.md).
 The local tests exercise binary slices,
 concurrent writes, file items, custom providers/index data, geo queries,
 multi-archive searches, illustration names, invalid inputs, and lifecycle.
 
-CI runs the local tests and verifies ESM/CommonJS loading from packed npm
-packages installed in a clean temporary directory with `--ignore-scripts`.
+CI runs the local and upstream tests, then repeats the upstream suite and
+verifies ESM/CommonJS loading from packed npm packages installed in a clean
+temporary directory with `--ignore-scripts`.
 It checks that JavaScript helpers are bundled and audits dynamic linkage to reject external libzim,
 compression, or search libraries. Pull requests and main pushes upload the
 platform bindings and complete npm tarballs as artifacts.

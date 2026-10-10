@@ -28,7 +28,7 @@ import {
   getClusterCacheCurrentSize,
   getClusterCacheMaxSize,
   setClusterCacheMaxSize,
-} from "../../dist/index.js";
+} from "../src/index.js";
 
 describe("IntegrityCheck", () => {
   it("is exported with symbols", () => {

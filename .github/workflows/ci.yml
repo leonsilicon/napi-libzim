@@ -65,6 +65,8 @@ jobs:
         run: vp run build
       - run: cargo fmt --check
       - run: cargo clippy --release -- -D warnings
+      - name: Run every upstream compatibility test with reviewed patches
+        run: vp run test:upstream
       - run: vp check
       - run: vp test
       - name: Audit native linkage

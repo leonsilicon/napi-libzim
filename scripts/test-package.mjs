@@ -4,6 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { npm, root } from "./package-utils.mjs";
+import { runUpstreamTests } from "./upstream-tests.mjs";
 const suffix = process.argv[2];
 const directory = mkdtempSync(resolve(tmpdir(), "napi-libzim-install-"));
 try {
@@ -28,7 +29,15 @@ try {
     {},
     "Helper packages must be bundled, not runtime dependencies",
   );
-  for (const helper of ["p-limit", "yocto-queue", "execa", "semver"]) {
+  for (const helper of [
+    "p-limit",
+    "yocto-queue",
+    "execa",
+    "semver",
+    "@babel/parser",
+    "diff",
+    "magic-string",
+  ]) {
     assert.equal(
       existsSync(resolve(directory, "node_modules", helper)),
       false,
@@ -46,6 +55,7 @@ try {
     },
   };
   // Verify both package entry points using only the clean npm installation.
+  runUpstreamTests(directory, options);
   execaSync(
     process.execPath,
     [

@@ -24,3 +24,4 @@ release
 *.node
 
 .ci
+.upstream-tests

@@ -45,6 +45,8 @@
     "build:js": "vp pack",
     "build": "vp run build:native && vp run build:js",
     "test": "vp test",
+    "test:upstream": "node scripts/upstream-tests.mjs && vp exec tsc --project tsconfig.upstream.json",
+    "patch:upstream": "node scripts/upstream-tests.mjs --update-patch",
     "check": "vp check",
     "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm --build-output-dir binding",
     "npm:dirs": "napi create-npm-dirs",
@@ -52,11 +54,14 @@
     "prepare": "vp config"
   },
   "devDependencies": {
+    "@babel/parser": "^8.0.7",
     "@napi-rs/cli": "^3.10.8",
     "@types/node": "^26.1.1",
     "@types/semver": "^7.8.0",
     "bumpp": "^11.1.0",
+    "diff": "^9.0.0",
     "execa": "^10.1.0",
+    "magic-string": "^1.4.3",
     "p-limit": "^7.3.3",
     "semver": "^7.8.5",
     "typescript": "^7.0.2",

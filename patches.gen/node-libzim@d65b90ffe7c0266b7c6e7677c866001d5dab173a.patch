@@ -1,0 +1,28 @@
+===================================================================
+--- a/dist.test.ts
++++ b/dist.test.ts
+@@ -13,9 +13,9 @@
+   Searcher,
+   StringItem,
+   StringProvider,
+   SuggestionSearcher,
+-} from "../dist/index.js";
++} from "napi-libzim";
+ 
+ describe("libzim dist", () => {
+   it("should have all the functions", () => {
+     assert(Archive);
+===================================================================
+--- a/zim.test.ts
++++ b/zim.test.ts
+@@ -27,9 +27,9 @@
+   type WriterItem,
+   getClusterCacheCurrentSize,
+   getClusterCacheMaxSize,
+   setClusterCacheMaxSize,
+-} from "../src/index.js";
++} from "napi-libzim";
+ 
+ describe("IntegrityCheck", () => {
+   it("is exported with symbols", () => {
+     const integrityCheckKeys = Object.keys(IntegrityCheck);

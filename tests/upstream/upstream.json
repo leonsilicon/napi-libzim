@@ -1,0 +1,14 @@
+{
+  "repository": "https://github.com/openzim/node-libzim",
+  "commit": "d65b90ffe7c0266b7c6e7677c866001d5dab173a",
+  "files": {
+    "dist.test.ts": {
+      "sha256": "faa819e1b9e6c1a2608e960fe4ca2123cd75164f9ee4038f5ccfabd464121da9",
+      "import": "../dist/index.js"
+    },
+    "zim.test.ts": {
+      "sha256": "d7582cc44e176192482ae0663169e4f7d74cdbf33ce6d1ccbf38086036e49201",
+      "import": "../src/index.js"
+    }
+  }
+}

@@ -32,6 +32,7 @@ export default defineConfig({
     ignorePatterns: [
       "binding/**",
       "tests/upstream/**",
+      ".upstream-tests/**",
       ".native/**",
       "dist/**",
       "npm/**",
@@ -47,6 +48,7 @@ export default defineConfig({
     ignorePatterns: [
       "binding/**",
       "tests/upstream/**",
+      ".upstream-tests/**",
       ".native/**",
       "dist/**",
       "npm/**",
