@@ -1,0 +1,82 @@
+{
+  "name": "napi-libzim",
+  "version": "0.1.0",
+  "description": "Node-API bindings to libzim with bundled native dependencies",
+  "homepage": "https://github.com/leonsilicon/napi-libzim#readme",
+  "bugs": {
+    "url": "https://github.com/leonsilicon/napi-libzim/issues"
+  },
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leonsilicon/napi-libzim.git"
+  },
+  "files": [
+    "dist",
+    "binding/index.cjs",
+    "binding/index.d.cts",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build:deps": "node scripts/build-deps.mjs",
+    "build:native": "node scripts/build-native.mjs",
+    "build:js": "vp pack",
+    "build": "vp run build:native && vp run build:js",
+    "test": "vp test",
+    "test:upstream": "node --test tests/upstream/*.test.ts",
+    "check": "vp check",
+    "artifacts": "napi artifacts --output-dir artifacts --npm-dir npm --build-output-dir binding",
+    "npm:dirs": "napi create-npm-dirs",
+    "prepublishOnly": "vp run build:js",
+    "prepare": "vp config"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.10.8",
+    "@types/node": "^26.1.1",
+    "bumpp": "^11.1.0",
+    "typescript": "^7.0.2",
+    "vite-plus": "catalog:"
+  },
+  "napi": {
+    "binaryName": "napi-libzim",
+    "packageName": "napi-libzim",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.11.2",
+      "onFail": "warn"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

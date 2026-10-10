@@ -1,0 +1,23 @@
+[package]
+name = "napi-libzim"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+crate-type = ["cdylib"]
+path = "native/lib.rs"
+
+[dependencies]
+cxx = "1.0"
+napi = { version = "3", features = ["napi8"] }
+napi-derive = "3"
+
+[build-dependencies]
+cxx-build = "1.0"
+napi-build = "2"
+vcpkg = "0.2"
+
+[profile.release]
+lto = true
+strip = "symbols"

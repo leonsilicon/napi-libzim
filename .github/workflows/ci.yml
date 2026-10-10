@@ -1,0 +1,129 @@
+name: Build and publish
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+jobs:
+  build:
+    name: ${{ matrix.target }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+            suffix: darwin-arm64
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            suffix: darwin-x64
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            suffix: linux-x64-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            suffix: linux-arm64-gnu
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+            suffix: win32-x64-msvc
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      VCPKG_BINARY_SOURCES: clear;files,${{ github.workspace }}/.native/cache,readwrite
+    steps:
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1.21.1
+        with:
+          node-version: "24"
+          cache: true
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/cache@v4
+        with:
+          path: .native/cache
+          key: vcpkg-${{ matrix.os }}-${{ hashFiles('vcpkg*.json', 'native/ports/**') }}
+      - name: Linux build prerequisites
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y autoconf automake libtool pkg-config ninja-build
+      - name: Bundle libzim and dependencies from source
+        run: vp run build:deps
+      - name: Build Node-API addon and facade
+        run: vp run build
+      - run: cargo fmt --check
+      - run: cargo clippy --release -- -D warnings
+      - run: vp check
+      - run: vp test
+      - name: Run every upstream compatibility test
+        run: vp run test:upstream
+      - name: Audit native linkage
+        run: node scripts/audit-linkage.mjs binding/napi-libzim.${{ matrix.suffix }}.node
+      - name: Prepare platform package
+        run: node scripts/stage-platform.mjs ${{ matrix.suffix }}
+      - name: Test npm installation without build tools or install scripts
+        run: node scripts/test-package.mjs ${{ matrix.suffix }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.suffix }}
+          path: |
+            binding/napi-libzim.${{ matrix.suffix }}.node
+            binding/index.cjs
+            binding/index.d.cts
+            platform-licenses/
+          if-no-files-found: error
+  package:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1.21.1
+        with:
+          node-version: "24"
+          cache: true
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Assemble napi-rs platform packages
+        run: node scripts/assemble-packages.mjs
+      - run: vp run build:js
+      - name: Check release contents
+        run: vp exec napi pre-publish --dry-run --root-publisher npm
+      - name: Pack all npm packages
+        run: node scripts/pack-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-packages
+          path: release/*.tgz
+          if-no-files-found: error
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-22.04
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@v4
+        with:
+          name: npm-packages
+          path: release
+      - name: Publish verified platform packages, then the root package
+        run: node scripts/publish-release.mjs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
