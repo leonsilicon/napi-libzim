@@ -20,7 +20,7 @@ try {
   cpSync(resolve(root, ".ci/publish-release.js"), resolve(directory, ".ci/publish-release.js"));
   cpSync(resolve(root, "package.json"), resolve(directory, "package.json"));
   cpSync(resolve(root, "release"), resolve(directory, "release"), { recursive: true });
-  const { version } = JSON.parse(readFileSync(resolve(directory, "package.json"), "utf8"));
+  const { name, version } = JSON.parse(readFileSync(resolve(directory, "package.json"), "utf8"));
   // No node_modules in this directory: the release helper must be self-contained.
   execaSync(process.execPath, [".ci/publish-release.js", "--dry-run"], {
     cwd: directory,
@@ -74,7 +74,7 @@ else appendFileSync(process.env.TEST_NPM_LOG, JSON.stringify(process.argv.slice(
     readdirSync(resolve(directory, "release")).filter((name) => name.endsWith(".tgz")).length,
   );
   assert(
-    calls.at(-1)[1].endsWith(`napi-libzim-${version}.tgz`),
+    calls.at(-1)[1].endsWith(`${name.replace(/^@/, "").replace("/", "-")}-${version}.tgz`),
     "Root package must be published last",
   );
   for (const call of calls) {

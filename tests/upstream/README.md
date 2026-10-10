@@ -12,7 +12,7 @@ preserves all other source with MagicString, and generates a unified diff using
 the npm `diff` package. `patches.gen/node-libzim@<commit>.patch` is checked in for
 review. CI fails if the upstream source or generated patch drifts.
 
-The patch changes imports to `napi-libzim` and adapts the upstream Blob/Buffer
+The patch changes imports to `@leonsilicon/napi-libzim` and adapts the upstream Blob/Buffer
 contract to Uint8Array using `scripts/upstream-uint8array.mjs`:
 
 - Blob construction becomes TextEncoder encoding or an empty Uint8Array.

@@ -2,7 +2,7 @@
 --- a/dist.test.ts
 +++ b/dist.test.ts
 @@ -1,9 +1,9 @@
-+import * as libzim from "napi-libzim";
++import * as libzim from "@leonsilicon/napi-libzim";
  import assert from "node:assert/strict";
  import { describe, it } from "node:test";
  import {
@@ -18,7 +18,7 @@
    StringProvider,
    SuggestionSearcher,
 -} from "../dist/index.js";
-+} from "napi-libzim";
++} from "@leonsilicon/napi-libzim";
  
  describe("libzim dist", () => {
    it("should have all the functions", () => {
@@ -51,7 +51,7 @@
    getClusterCacheMaxSize,
    setClusterCacheMaxSize,
 -} from "../src/index.js";
-+} from "napi-libzim";
++} from "@leonsilicon/napi-libzim";
  
  describe("IntegrityCheck", () => {
    it("is exported with symbols", () => {

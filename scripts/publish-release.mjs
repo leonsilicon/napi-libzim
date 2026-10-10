@@ -16,7 +16,7 @@ if (!dryRun) {
   if (!gte(npm(["--version"], root, true).trim(), "11.5.1"))
     throw new Error("Trusted publishing requires npm >=11.5.1");
 }
-const rootTarball = `${manifest.name}-${manifest.version}.tgz`;
+const rootTarball = `${manifest.name.replace(/^@/, "").replace("/", "-")}-${manifest.version}.tgz`;
 const files = readdirSync(resolve(root, "release"));
 if (!files.includes(rootTarball)) throw new Error("Missing root package");
 const tag = prerelease(manifest.version) !== null ? "next" : "latest";

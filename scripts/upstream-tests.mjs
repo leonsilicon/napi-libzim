@@ -22,7 +22,7 @@ function patchImports(filename, source, expectedImport) {
   let matches = 0;
   for (const statement of tree.program.body) {
     if (statement.type === "ImportDeclaration" && statement.source.value === expectedImport) {
-      output.overwrite(statement.source.start, statement.source.end, '"napi-libzim"');
+      output.overwrite(statement.source.start, statement.source.end, '"@leonsilicon/napi-libzim"');
       matches++;
     }
   }

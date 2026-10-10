@@ -1,5 +1,5 @@
 {
-  "name": "napi-libzim",
+  "name": "@leonsilicon/napi-libzim",
   "version": "0.1.0",
   "description": "Node-API bindings to libzim with bundled native dependencies",
   "homepage": "https://github.com/leonsilicon/napi-libzim#readme",
@@ -72,7 +72,7 @@
   },
   "napi": {
     "binaryName": "napi-libzim",
-    "packageName": "napi-libzim",
+    "packageName": "@leonsilicon/napi-libzim",
     "targets": [
       "aarch64-apple-darwin",
       "x86_64-apple-darwin",

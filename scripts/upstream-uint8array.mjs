@@ -24,7 +24,7 @@ export function patchUint8Array(filename, source) {
   let removedImports = 0;
   traverse(tree, {
     ImportDeclaration({ node }) {
-      if (node.source.value !== "napi-libzim") return;
+      if (node.source.value !== "@leonsilicon/napi-libzim") return;
       const index = node.specifiers.findIndex((specifier) => specifier.local.name === "Blob");
       assert.notEqual(index, -1, `${filename}: upstream Blob import drifted`);
       const specifier = node.specifiers[index];
@@ -80,7 +80,7 @@ export function patchUint8Array(filename, source) {
           node.arguments[0]?.type === "Identifier" &&
           node.arguments[0].name === "Blob"
         ) {
-          output.prepend('import * as libzim from "napi-libzim";\n');
+          output.prepend('import * as libzim from "@leonsilicon/napi-libzim";\n');
           output.overwrite(node.start, node.end, 'assert.equal("Blob" in libzim, false)');
         }
       },

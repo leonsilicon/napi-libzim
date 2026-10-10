@@ -1,4 +1,4 @@
-# napi-libzim
+# @leonsilicon/napi-libzim
 
 A napi-rs wrapper around [libzim](https://github.com/openzim/libzim), with the
 JavaScript API of [@openzim/libzim](https://github.com/openzim/node-libzim),
@@ -9,11 +9,11 @@ Rust/C++ toolchain, libzim installation, library-path configuration, or
 install-time download script.
 
 ```sh
-npm install napi-libzim
+npm install @leonsilicon/napi-libzim
 ```
 
 ```js
-import { Archive, Creator, StringItem, Query, Searcher } from "napi-libzim";
+import { Archive, Creator, StringItem, Query, Searcher } from "@leonsilicon/napi-libzim";
 
 const creator = new Creator()
   .configIndexing(true, "en")
@@ -47,7 +47,7 @@ package has no JavaScript runtime dependencies. Build/release scripts use
 `execa`, `semver`, and the napi-rs programmatic API. The release script is also
 bundled before it is uploaded for publishing.
 
-CommonJS (`require("napi-libzim")`) and TypeScript are also supported. To migrate
+CommonJS (`require("@leonsilicon/napi-libzim")`) and TypeScript are also supported. To migrate
 from `@openzim/libzim`, change the import specifier and adapt binary content
 access as shown below. The API includes `Archive`,
 `OpenConfig`, `Entry`, `Item`, `Creator`, `StringItem`, `FileItem`,
@@ -87,13 +87,13 @@ custom JavaScript providers are buffered when passed to the writer.
 Node.js 22 or newer. GitHub Actions builds and tests each platform on its native
 architecture, then napi-rs creates the matching optional npm package:
 
-| Platform    | Architecture | Platform package              | Minimum build runtime                     |
-| ----------- | ------------ | ----------------------------- | ----------------------------------------- |
-| macOS       | ARM64        | `napi-libzim-darwin-arm64`    | macOS 11                                  |
-| macOS       | x64          | `napi-libzim-darwin-x64`      | macOS 11                                  |
-| Linux glibc | x64          | `napi-libzim-linux-x64-gnu`   | glibc 2.35 (Ubuntu 22.04)                 |
-| Linux glibc | ARM64        | `napi-libzim-linux-arm64-gnu` | glibc 2.39 (Ubuntu 24.04)                 |
-| Windows     | x64          | `napi-libzim-win32-x64-msvc`  | Windows 10 with the standard MSVC runtime |
+| Platform    | Architecture | Platform package                           | Minimum build runtime                     |
+| ----------- | ------------ | ------------------------------------------ | ----------------------------------------- |
+| macOS       | ARM64        | `@leonsilicon/napi-libzim-darwin-arm64`    | macOS 11                                  |
+| macOS       | x64          | `@leonsilicon/napi-libzim-darwin-x64`      | macOS 11                                  |
+| Linux glibc | x64          | `@leonsilicon/napi-libzim-linux-x64-gnu`   | glibc 2.35 (Ubuntu 22.04)                 |
+| Linux glibc | ARM64        | `@leonsilicon/napi-libzim-linux-arm64-gnu` | glibc 2.39 (Ubuntu 24.04)                 |
+| Windows     | x64          | `@leonsilicon/napi-libzim-win32-x64-msvc`  | Windows 10 with the standard MSVC runtime |
 
 Linux still uses the host's standard C/C++ runtime; Windows uses the standard
 MSVC runtime. libzim and all its non-system dependencies are included. Alpine /

@@ -22,7 +22,7 @@ try {
     directory,
   );
   const installed = JSON.parse(
-    readFileSync(resolve(directory, "node_modules/napi-libzim/package.json"), "utf8"),
+    readFileSync(resolve(directory, "node_modules/@leonsilicon/napi-libzim/package.json"), "utf8"),
   );
   assert.deepEqual(
     installed.dependencies ?? {},
@@ -63,7 +63,7 @@ try {
     [
       "--input-type=module",
       "-e",
-      "import { Archive, Creator } from 'napi-libzim'; if (!Archive || !Creator) throw Error('Missing ESM exports')",
+      "import { Archive, Creator } from '@leonsilicon/napi-libzim'; if (!Archive || !Creator) throw Error('Missing ESM exports')",
     ],
     options,
   );
@@ -71,7 +71,7 @@ try {
     process.execPath,
     [
       "-e",
-      "const z = require('napi-libzim'); if (!z.Archive || !z.Creator || 'Blob' in z) throw Error('Invalid CommonJS exports'); const bytes = new z.StringProvider(new Uint8Array([0, 255])).feed(); if (bytes.constructor !== Uint8Array || bytes[0] !== 0 || bytes[1] !== 255) throw Error('Invalid CommonJS bytes')",
+      "const z = require('@leonsilicon/napi-libzim'); if (!z.Archive || !z.Creator || 'Blob' in z) throw Error('Invalid CommonJS exports'); const bytes = new z.StringProvider(new Uint8Array([0, 255])).feed(); if (bytes.constructor !== Uint8Array || bytes[0] !== 0 || bytes[1] !== 255) throw Error('Invalid CommonJS bytes')",
     ],
     options,
   );
